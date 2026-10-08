@@ -8,8 +8,8 @@ import Image from "next/image"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
-  { icon: BarChart2, label: "Stats", href: "/stats" },
-  { icon: Zap, label: "Streaks", href: "/streaks" },
+  { icon: Zap, label: "Habits", href: "/habits" },
+  { icon: BarChart2, label: "Goals", href: "/goals" },
   { icon: User, label: "Profile", href: "/profile" },
 ]
 
