@@ -1,25 +1,19 @@
 import { Header } from "@/components/header"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { GoalStats } from "./components/goal-stats"
 import { GoalList } from "./components/goal-list"
+import { AddGoalButton } from "./components/add-goal-button"
 
 export default function GoalsPage() {
   return (
-    <div className="flex flex-col h-full bg-[#EFF6FF]">
-      <Header 
-        title="Goals" 
-        subtext="Track and manage your personal goals" 
-        action={
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-6 py-6 font-bold flex gap-2">
-            <Plus className="h-5 w-5" />
-            Add Goal
-          </Button>
-        }
+    <div className="flex h-full flex-col">
+      <Header
+        title="Goals"
+        subtext="Track and manage your personal goals"
+        action={<AddGoalButton />}
       />
-      
-      <div className="flex-1 p-8 overflow-y-auto bg-[#f8fafc]">
-        <div className="space-y-10">
+
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="space-y-6">
           <GoalStats />
           <GoalList />
         </div>

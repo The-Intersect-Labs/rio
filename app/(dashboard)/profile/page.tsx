@@ -1,147 +1,325 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Zap, Calendar, Target, TrendingUp, BarChart2, Flame, AlertTriangle, Bell, Sun, MessageSquare, Lightbulb, User, Clock, CheckCircle2, ChevronRight, Activity } from "lucide-react"
 import Image from "next/image"
+import {
+  Activity,
+  Star,
+  Dumbbell,
+  Brain,
+  BarChart3,
+  Target,
+  Flame,
+  TrendingUp,
+  Pencil,
+  Bell,
+  CalendarDays,
+  MessageCircle,
+  Lightbulb,
+  ChevronRight,
+  Droplet,
+} from "lucide-react"
+
+/* ------------------------------------------------------------------ */
+/*  Primitives                                                        */
+/* ------------------------------------------------------------------ */
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-heading text-[18px] font-semibold text-[#131313]">
+      {children}
+    </h2>
+  )
+}
+
+function IconChip({
+  icon: Icon,
+  color,
+  size = 30,
+}: {
+  icon: React.ElementType
+  color: string
+  size?: number
+}) {
+  return (
+    <div
+      className="flex shrink-0 items-center justify-center rounded-lg text-white"
+      style={{ backgroundColor: color, width: size, height: size }}
+    >
+      <Icon style={{ width: size * 0.47, height: size * 0.47 }} />
+    </div>
+  )
+}
+
+function Badge({
+  children,
+  bg,
+  color,
+}: {
+  children: React.ReactNode
+  bg: string
+  color: string
+}) {
+  return (
+    <span
+      className="rounded-full px-2.5 py-1 text-[12px] font-semibold"
+      style={{ backgroundColor: bg, color }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function InfoRow({
+  icon,
+  iconColor,
+  label,
+  value,
+  badge,
+}: {
+  icon: React.ElementType
+  iconColor: string
+  label: string
+  value: string
+  badge?: { bg: string; color: string }
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <div className="flex items-center gap-3">
+        <IconChip icon={icon} color={iconColor} />
+        <span className="font-sans text-[14px] font-medium text-[#131313]">
+          {label}
+        </span>
+      </div>
+      {badge ? (
+        <Badge bg={badge.bg} color={badge.color}>
+          {value}
+        </Badge>
+      ) : (
+        <span className="font-sans text-[14px] font-semibold text-[#131313]">
+          {value}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Data                                                              */
+/* ------------------------------------------------------------------ */
+
+const snapshot = [
+  { icon: Activity, iconColor: "#2563EB", label: "Active Habits", value: "4" },
+  {
+    icon: Star,
+    iconColor: "#F59E0B",
+    label: "Keystone Habit",
+    value: "Read 20 mins",
+    badge: { bg: "#FEF3C7", color: "#B45309" },
+  },
+  {
+    icon: Dumbbell,
+    iconColor: "#28A745",
+    label: "Strongest Pillar",
+    value: "Body",
+    badge: { bg: "#C9E9D1", color: "#1B7A3E" },
+  },
+  {
+    icon: Brain,
+    iconColor: "#FF6B35",
+    label: "Weakest Pillar",
+    value: "Mind",
+    badge: { bg: "#FEE2E2", color: "#DC2626" },
+  },
+  {
+    icon: BarChart3,
+    iconColor: "#7C3AED",
+    label: "Weekly Consistency",
+    value: "90%",
+    badge: { bg: "#C9E9D1", color: "#1B7A3E" },
+  },
+]
+
+const scorecards = [
+  { icon: Target, color: "#E20004", label: "Hit the Gym", pct: 100, total: 5 },
+  { icon: Activity, color: "#28A745", label: "Read 20 mins", pct: 86, total: 21 },
+  { icon: Droplet, color: "#2563EB", label: "Drink Water", pct: 86, total: 12 },
+  { icon: Flame, color: "#7C3AED", label: "Meditation", pct: 86, total: 6 },
+]
+
+const analytics = [
+  {
+    icon: Activity,
+    iconColor: "#7C3AED",
+    label: "Peak Productive Time",
+    value: "Afternoon",
+    badge: { bg: "#F1F1F1", color: "#4B5563" },
+  },
+  { icon: BarChart3, iconColor: "#2563EB", label: "Avg Completion Rate", value: "90%" },
+  { icon: Flame, iconColor: "#FF6B35", label: "Streak Average", value: "10 days" },
+  {
+    icon: Target,
+    iconColor: "#28A745",
+    label: "Risk Score",
+    value: "Low",
+    badge: { bg: "#C9E9D1", color: "#1B7A3E" },
+  },
+]
+
+const preferences = [
+  { icon: Bell, iconColor: "#2563EB", label: "Notification Time", value: "8:00 AM" },
+  { icon: CalendarDays, iconColor: "#7C3AED", label: "Weekly Review Day", value: "Sunday" },
+  { icon: MessageCircle, iconColor: "#28A745", label: "Reminder Style", value: "Gentle" },
+  { icon: Lightbulb, iconColor: "#F59E0B", label: "Insight Tone", value: "Encouraging" },
+]
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                              */
+/* ------------------------------------------------------------------ */
 
 export default function ProfilePage() {
   return (
-    <div className="p-8 space-y-8 bg-[#E6F4EA] min-h-screen">
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-        <p className="text-gray-500">Manage your habits, settings, and insights</p>
-      </header>
+    <div className="min-h-full space-y-6 bg-[#E6F6F7] p-6 lg:p-8">
+      {/* Page title */}
+      <h1 className="font-heading text-[24px] font-bold text-[#131313]">
+        Profile
+      </h1>
 
-      <Card className="rounded-3xl border-none shadow-sm">
-        <CardContent className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white shadow-md">
-              <Image src="/assets/signup.png" alt="Profile" width={80} height={80} />
+      {/* Profile header card — top accent bar */}
+      <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+        <div className="h-[3px] w-full bg-[#2563EB]" />
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full ring-4 ring-[#E6F6F7]">
+              <Image
+                src="/assets/signup.png"
+                alt="Ireti Ogunmola"
+                width={72}
+                height={72}
+                className="h-full w-full object-cover"
+              />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">Ireti Ogunmola</h2>
-              <p className="text-gray-500 italic">"I am building systems that last."</p>
-              <div className="flex gap-2 mt-2">
-                <span className="flex items-center gap-1 text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                  <Zap className="h-4 w-4" /> Discipline & Focus
+            <div className="space-y-1.5">
+              <h2 className="font-heading text-[20px] font-semibold text-[#131313]">
+                Ireti Ogunmola
+              </h2>
+              <p className="font-sans text-[13px] italic text-[#6B7280]">
+                &ldquo;I am building systems that last.&rdquo;
+              </p>
+              <div className="flex flex-wrap gap-2 pt-0.5">
+                <span className="flex items-center gap-1.5 rounded-full bg-[#C9D8FA] px-3 py-1 font-sans text-[12px] font-medium text-[#2563EB]">
+                  <Activity className="h-3.5 w-3.5" />
+                  Discipline &amp; Focus
                 </span>
-                <span className="flex items-center gap-1 text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                  <Calendar className="h-4 w-4" /> Joined Mar 21, 2026
+                <span className="flex items-center gap-1.5 rounded-full bg-[#F1F1F1] px-3 py-1 font-sans text-[12px] font-medium text-[#6B7280]">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  Joined Mar 21, 2026
                 </span>
               </div>
             </div>
           </div>
-          <button className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">✏️</button>
-        </CardContent>
-      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-        <Card className="rounded-3xl border-none shadow-sm">
-          <CardHeader><CardTitle className="text-lg">Behavioral Snapshot</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            {[
-              { icon: Zap, label: "Active Habits", value: "4", iconBg: "bg-blue-600", iconColor: "text-white" },
-              { icon: Sun, label: "Keystone Habit", value: "Read 20 mins", valueBg: "bg-yellow-100 text-yellow-800", iconBg: "bg-amber-500", iconColor: "text-white" },
-              { icon: Activity, label: "Strongest Pillar", value: "Body", valueBg: "bg-green-100 text-green-800", iconBg: "bg-green-600", iconColor: "text-white" },
-              { icon: TrendingUp, label: "Weakest Pillar", value: "Mind", valueBg: "bg-red-100 text-red-800", iconBg: "bg-red-600", iconColor: "text-white" },
-              { icon: BarChart2, label: "Weekly Consistency", value: "90%", valueBg: "bg-green-100 text-green-800", iconBg: "bg-indigo-600", iconColor: "text-white" },
-            ].map((item, i) => (
-              <div key={i} className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${item.iconBg} ${item.iconColor}`}>
-                    <item.icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                </div>
-                {item.valueBg ? (
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.valueBg}`}>{item.value}</span>
-                ) : (
-                  <span className="font-bold text-gray-900">{item.value}</span>
-                )}
-              </div>
+          <button
+            aria-label="Edit profile"
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg bg-[#F1F1F1] text-[#4B5563] transition-colors hover:bg-[#E5E7EB]"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Sections grid — responsive desktop layout */}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        {/* Behavioral Snapshot */}
+        <div className="space-y-3">
+          <SectionHeading>Behavioral Snapshot</SectionHeading>
+          <div className="space-y-1 rounded-3xl bg-[#FCFCFC] p-5 shadow-sm">
+            {snapshot.map((row) => (
+              <InfoRow key={row.label} {...row} />
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="rounded-3xl border-none shadow-sm">
-          <CardHeader><CardTitle className="text-lg">Scorecard History</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            {[
-              { icon: Target, label: "Hit the Gym", value: "100%", total: "5 total", progress: "7/7", color: "bg-red-500" },
-              { icon: Activity, label: "Read 20 mins", value: "86%", total: "21 total", progress: "6/7", color: "bg-green-600" },
-              { icon: Zap, label: "Meditation", value: "86%", total: "6 total", progress: "6/7", color: "bg-indigo-600" },
-            ].map((item, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center gap-2 font-medium">
-                    <div className={`p-1.5 rounded-lg ${item.color} text-white`}>
-                      <item.icon className="h-3 w-3" />
+        {/* Scorecard History */}
+        <div className="space-y-3">
+          <SectionHeading>Scorecard History</SectionHeading>
+          <div className="space-y-5 rounded-3xl bg-[#FCFCFC] p-5 shadow-sm">
+            {scorecards.map((item) => {
+              const filled = Math.round((item.pct / 100) * 7)
+              return (
+                <div key={item.label} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <IconChip icon={item.icon} color={item.color} size={32} />
+                      <span className="font-sans text-[14px] font-medium text-[#131313]">
+                        {item.label}
+                      </span>
                     </div>
-                    {item.label}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-green-600">{item.value}</span>
-                    <span className="text-xs text-gray-400">↗</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-sans text-[14px] font-semibold text-[#1B7A3E]">
+                        {item.pct}%
+                      </span>
+                      <TrendingUp className="h-4 w-4 text-[#22C55E]" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-1 gap-1">
+                      {Array.from({ length: 7 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="h-1.5 flex-1 rounded-full"
+                          style={{
+                            backgroundColor:
+                              i < filled ? item.color : "#E5E7EB",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span className="font-sans text-[12px] text-[#9CA3AF]">
+                      {filled}/7
+                    </span>
+                    <span className="font-sans text-[12px] text-[#9CA3AF]">
+                      {item.total} total
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex gap-1 ml-9">
-                        {[...Array(7)].map((_, i) => <div key={i} className={`w-4 h-2 rounded-full ${i < parseInt(item.progress) ? item.color : "bg-gray-200"}`} />)}
-                    </div>
-                    <span className="text-xs text-gray-400 ml-auto">{item.total}</span>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              )
+            })}
+          </div>
+        </div>
 
-        <div className="space-y-8">
-            <Card className="rounded-3xl border-none shadow-sm">
-              <CardHeader><CardTitle className="text-lg">Analytics</CardTitle></CardHeader>
-              <CardContent className="space-y-6">
-                {[
-                    { icon: Clock, label: "Peak Productive Time", value: "Afternoon", valueBg: "bg-purple-100 text-purple-800", iconBg: "bg-purple-600" },
-                    { icon: BarChart2, label: "Avg Completion Rate", value: "90%", iconBg: "bg-blue-600" },
-                    { icon: Flame, label: "Streak Average", value: "10 days", iconBg: "bg-orange-600" },
-                    { icon: AlertTriangle, label: "Risk Score", value: "Low", valueBg: "bg-green-100 text-green-800", iconBg: "bg-green-600" },
-                ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${item.iconBg} text-white`}>
-                                <item.icon className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                        </div>
-                        {item.valueBg ? (
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.valueBg}`}>{item.value}</span>
-                        ) : (
-                            <span className="font-bold text-gray-900">{item.value}</span>
-                        )}
-                    </div>
-                ))}
-              </CardContent>
-            </Card>
+        {/* Analytics + Preferences */}
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <SectionHeading>Analytics</SectionHeading>
+            <div className="space-y-1 rounded-3xl bg-[#FCFCFC] p-5 shadow-sm">
+              {analytics.map((row) => (
+                <InfoRow key={row.label} {...row} />
+              ))}
+            </div>
+          </div>
 
-            <Card className="rounded-3xl border-none shadow-sm">
-              <CardHeader><CardTitle className="text-lg">Settings</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
-                {[
-                    { icon: Bell, label: "Notification Time", value: "8:00 AM" },
-                    { icon: Calendar, label: "Weekly Review Day", value: "Sunday" },
-                    { icon: MessageSquare, label: "Reminder Style", value: "Gentle" },
-                    { icon: Lightbulb, label: "Insight Tone", value: "Encouraging" },
-                ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center py-2 cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2">
-                        <div className="flex items-center gap-3">
-                            <item.icon className="h-5 w-5 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                        </div>
-                        <div className="flex items-center text-sm font-semibold">
-                            {item.value}
-                            <ChevronRight className="h-4 w-4 text-gray-400 ml-2" />
-                        </div>
-                    </div>
-                ))}
-              </CardContent>
-            </Card>
+          <div className="space-y-3">
+            <SectionHeading>Preferences</SectionHeading>
+            <div className="space-y-1 rounded-3xl bg-[#FCFCFC] p-3 shadow-sm">
+              {preferences.map((item) => (
+                <button
+                  key={item.label}
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl px-2.5 py-3 text-left transition-colors hover:bg-white"
+                >
+                  <div className="flex items-center gap-3">
+                    <IconChip icon={item.icon} color={item.iconColor} />
+                    <span className="font-sans text-[14px] font-medium text-[#131313]">
+                      {item.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-sans text-[14px] font-semibold text-[#131313]">
+                      {item.value}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-[#9CA3AF]" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

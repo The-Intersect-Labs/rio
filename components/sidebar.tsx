@@ -2,29 +2,42 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BarChart2, Zap, User, Settings, LogOut } from "lucide-react"
+import {
+  Home,
+  BarChart3,
+  Flame,
+  User,
+  Settings,
+  LogOut,
+  PanelLeft,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/dashboard" },
-  { icon: Zap, label: "Habits", href: "/habits" },
-  { icon: BarChart2, label: "Goals", href: "/goals" },
+  { icon: BarChart3, label: "Stats", href: "/stats" },
+  { icon: Flame, label: "Daily Streak", href: "/streaks" },
   { icon: User, label: "Profile", href: "/profile" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-white">
-      <div className="flex h-20 items-center px-6">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-blue-600">RIO</span>
-        </Link>
+    <aside className="flex w-60 shrink-0 flex-col rounded-3xl bg-[#FCFCFC] p-5">
+      <div className="flex items-center justify-between px-1">
+        <span className="font-heading text-2xl font-bold text-[#2563EB]">RIO</span>
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F0F4FF] hover:text-[#2563EB]"
+          aria-label="Toggle sidebar"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-4 py-4">
+      <nav className="mt-6 flex flex-1 flex-col gap-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -32,10 +45,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl px-4 py-3 font-sans text-[16px] font-medium transition-colors",
                 isActive
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-[#2563EB] text-[#FCFCFC]"
+                  : "text-[#6B7280] hover:bg-[#F0F4FF] hover:text-[#2563EB]",
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -45,25 +58,30 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto border-t p-4 space-y-4">
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
-        >
-          <Settings className="h-5 w-5" />
-          Settings
-        </Link>
-        
-        <div className="flex items-center gap-3 px-4 py-2">
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-200">
-             <Image src="/assets/signup.png" alt="Avatar" width={40} height={40} className="object-cover" />
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center gap-3 px-1 py-2">
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-200">
+            <Image
+              src="/assets/signup.png"
+              alt="Avatar"
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
+            />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-gray-900">Ireti Ogunmola</span>
-            <span className="text-xs text-gray-500">Pro Member</span>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate font-sans text-[16px] font-medium text-black">
+              Ireti Ogunmola
+            </span>
+            <span className="font-sans text-[12px] text-[#6B7280]">Pro Member</span>
           </div>
         </div>
+
+        <button className="flex w-full items-center gap-3 rounded-xl px-4 py-2 font-sans text-[16px] font-medium text-[#E20004] transition-colors hover:bg-[#FDECEC]">
+          <LogOut className="h-5 w-5" />
+          Logout
+        </button>
       </div>
-    </div>
+    </aside>
   )
 }

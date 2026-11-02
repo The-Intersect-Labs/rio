@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import signupImage from "../../assets/signup.png";
 import { Check, X as XIcon } from "lucide-react";
@@ -11,6 +12,7 @@ import X from "../../assets/x.svg";
 import Link from "next/link";
 
 export default function SignupPage() {
+    const router = useRouter();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -48,6 +50,11 @@ export default function SignupPage() {
         }));
     };
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isFormValid) router.push("/onboarding");
+    };
+
     return (
         <main className="flex h-screen items-center">
 
@@ -64,7 +71,7 @@ export default function SignupPage() {
                     <h2 className="my-4 text-3xl text-center font-bold tracking-tight text-slate-950">
                         Create account
                     </h2>
-                    <form className="space-y-5">
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         <label className="block">
                             <span className="mb-2 block text-sm font-medium text-slate-700">Full Name</span>
                             <input
