@@ -1,10 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import {
-  Target,
-  Flame,
-  ListChecks,
-  CalendarCheck,
-} from "lucide-react"
+import { Target, Flame, ListChecks, CalendarCheck } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -17,42 +12,52 @@ interface Stat {
   iconColor: string
 }
 
-const stats: Stat[] = [
-  {
-    label: "Completion Rate",
-    value: "82%",
-    subtext: "Last 30 days",
-    icon: Target,
-    iconBg: "bg-[#EBF1FF]",
-    iconColor: "text-[#2563EB]",
-  },
-  {
-    label: "Current Streak",
-    value: "12",
-    subtext: "Days in a row",
-    icon: Flame,
-    iconBg: "bg-[#FFDACD]",
-    iconColor: "text-[#FF6B35]",
-  },
-  {
-    label: "Total Habits",
-    value: "6",
-    subtext: "4 active today",
-    icon: ListChecks,
-    iconBg: "bg-[#DECEFB]",
-    iconColor: "text-[#7C3AED]",
-  },
-  {
-    label: "Best Day",
-    value: "Tue",
-    subtext: "94% completion",
-    icon: CalendarCheck,
-    iconBg: "bg-[#F1FBF4]",
-    iconColor: "text-[#228E3B]",
-  },
-]
+export interface StatCardsData {
+  completionRate: number
+  avgStreak: number
+  totalHabits: number
+  checkinsLogged: number
+}
 
-export function StatCards() {
+function buildStats(data: StatCardsData): Stat[] {
+  return [
+    {
+      label: "Completion Rate",
+      value: `${Math.round(data.completionRate)}%`,
+      subtext: "Last 30 days",
+      icon: Target,
+      iconBg: "bg-[#EBF1FF]",
+      iconColor: "text-[#2563EB]",
+    },
+    {
+      label: "Avg Streak",
+      value: String(Math.round(data.avgStreak)),
+      subtext: "Days across habits",
+      icon: Flame,
+      iconBg: "bg-[#FFDACD]",
+      iconColor: "text-[#FF6B35]",
+    },
+    {
+      label: "Total Habits",
+      value: String(data.totalHabits),
+      subtext: "Being tracked",
+      icon: ListChecks,
+      iconBg: "bg-[#DECEFB]",
+      iconColor: "text-[#7C3AED]",
+    },
+    {
+      label: "Check-ins",
+      value: String(data.checkinsLogged),
+      subtext: "Last 30 days",
+      icon: CalendarCheck,
+      iconBg: "bg-[#F1FBF4]",
+      iconColor: "text-[#228E3B]",
+    },
+  ]
+}
+
+export function StatCards({ data }: { data: StatCardsData }) {
+  const stats = buildStats(data)
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (

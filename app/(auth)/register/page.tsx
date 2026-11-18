@@ -10,9 +10,13 @@ import Apple from "../../assets/apple.svg";
 import LinkedIn from "../../assets/linkedin.svg";
 import X from "../../assets/x.svg";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth/auth-context";
 
 export default function SignupPage() {
     const router = useRouter();
+    const { signUp, signInWithGoogle, configured } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -50,9 +54,29 @@ export default function SignupPage() {
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (isFormValid) router.push("/onboarding");
+        if (!isFormValid) return;
+        setError(null);
+        setSubmitting(true);
+        try {
+            await signUp(formData.email.trim(), formData.password);
+            router.push("/onboarding");
+        } catch (err) {
+            setError((err as Error).message.replace("Firebase: ", ""));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleGoogle = async () => {
+        setError(null);
+        try {
+            await signInWithGoogle();
+            router.push("/onboarding");
+        } catch (err) {
+            setError((err as Error).message.replace("Firebase: ", ""));
+        }
     };
 
     return (
@@ -72,6 +96,14 @@ export default function SignupPage() {
                         Create account
                     </h2>
                     <form className="space-y-5" onSubmit={handleSubmit}>
+                        {!configured && (
+                            <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                                Auth isn&apos;t configured yet — set NEXT_PUBLIC_FIREBASE_* in .env.local.
+                            </p>
+                        )}
+                        {error && (
+                            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
+                        )}
                         <label className="block">
                             <span className="mb-2 block text-sm font-medium text-slate-700">Full Name</span>
                             <input
@@ -179,10 +211,10 @@ export default function SignupPage() {
 
                         <button
                             type="submit"
-                            disabled={!isFormValid}
+                            disabled={!isFormValid || submitting || !configured}
                             className="inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white bg-[#2563EB] disabled:bg-[#C9D8FA] disabled:cursor-not-allowed cursor-pointer"
                         >
-                            Sign Up
+                            {submitting ? "Creating account…" : "Sign Up"}
                         </button>
                     </form>
 
@@ -197,7 +229,12 @@ export default function SignupPage() {
                     </div>
 
                     <div className="flex flex-col gap-4 mt-5">
-                        <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                        <button
+                            type="button"
+                            onClick={handleGoogle}
+                            disabled={!configured}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
                             <Image src={Google} alt="Google logo" className="h-5 w-5" />
                             Google
                         </button>

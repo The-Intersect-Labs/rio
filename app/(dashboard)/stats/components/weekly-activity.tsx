@@ -8,16 +8,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-
-const data = [
-  { day: "Mon", completed: 3 },
-  { day: "Tue", completed: 5 },
-  { day: "Wed", completed: 4 },
-  { day: "Thu", completed: 2 },
-  { day: "Fri", completed: 6 },
-  { day: "Sat", completed: 5 },
-  { day: "Sun", completed: 4 },
-]
+import type { DailyActivity } from "@/lib/api/use-weekly-activity"
 
 const chartConfig = {
   completed: {
@@ -26,7 +17,17 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function WeeklyActivity() {
+export function WeeklyActivity({
+  data,
+  total,
+  isLoading,
+}: {
+  data: DailyActivity[]
+  total: number
+  isLoading?: boolean
+}) {
+  const peak = data.reduce((m, d) => Math.max(m, d.completed), 0)
+
   return (
     <Card className="rounded-3xl border-none bg-[#FCFCFC] shadow-sm">
       <CardContent className="p-6">
@@ -35,7 +36,7 @@ export function WeeklyActivity() {
             Weekly Activity
           </h3>
           <span className="font-sans text-[14px] font-medium text-[#6B7280]">
-            29 of 42 habits
+            {isLoading ? "Loading…" : `${total} check-ins`}
           </span>
         </div>
         <p className="mb-5 font-sans text-[13px] text-[#6B7280]">
@@ -44,11 +45,7 @@ export function WeeklyActivity() {
 
         <ChartContainer config={chartConfig} className="h-[240px] w-full">
           <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid
-              vertical={false}
-              stroke="#C9E7EA"
-              strokeDasharray="4 4"
-            />
+            <CartesianGrid vertical={false} stroke="#C9E7EA" strokeDasharray="4 4" />
             <XAxis
               dataKey="day"
               tickLine={false}
@@ -66,16 +63,11 @@ export function WeeklyActivity() {
               cursor={{ fill: "#EBF1FF", radius: 8 }}
               content={<ChartTooltipContent />}
             />
-            <Bar
-              dataKey="completed"
-              radius={[8, 8, 0, 0]}
-              maxBarSize={44}
-              isAnimationActive={false}
-            >
+            <Bar dataKey="completed" radius={[8, 8, 0, 0]} maxBarSize={44} isAnimationActive={false}>
               {data.map((entry, index) => (
                 <Cell
                   key={index}
-                  fill={entry.day === "Fri" ? "#2563EB" : "#93B4F5"}
+                  fill={entry.completed === peak && peak > 0 ? "#2563EB" : "#93B4F5"}
                 />
               ))}
             </Bar>

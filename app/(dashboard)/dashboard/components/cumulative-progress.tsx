@@ -1,12 +1,30 @@
 import { Card, CardContent } from "@/components/ui/card"
 
-const rows = [
-  { label: "Today", value: "1 / 4 habits complete", pct: 25 },
-  { label: "Week", value: "11 / 14 habits complete", pct: 78 },
-  { label: "Month", value: "46 / 60 habits complete", pct: 77 },
-]
+interface ProgressRow {
+  label: string
+  value: string
+  pct: number
+}
 
-export function CumulativeProgress() {
+interface CumulativeProgressProps {
+  today: { completed: number; total: number }
+  weekPct: number
+  monthPct?: number
+}
+
+export function CumulativeProgress({ today, weekPct, monthPct }: CumulativeProgressProps) {
+  const rows: ProgressRow[] = [
+    {
+      label: "Today",
+      value: `${today.completed} / ${today.total} habits complete`,
+      pct: today.total ? Math.round((today.completed / today.total) * 100) : 0,
+    },
+    { label: "Week", value: `${weekPct}% consistency`, pct: weekPct },
+  ]
+  if (monthPct !== undefined) {
+    rows.push({ label: "Month (30d)", value: `${monthPct}% completion`, pct: monthPct })
+  }
+
   return (
     <Card className="rounded-3xl border-none bg-[#FCFCFC] shadow-sm">
       <CardContent className="p-5">
@@ -25,8 +43,8 @@ export function CumulativeProgress() {
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-[#C9D0DD]">
                 <div
-                  className="h-full rounded-full bg-[#28A745]"
-                  style={{ width: `${row.pct}%` }}
+                  className="h-full rounded-full bg-[#28A745] transition-all"
+                  style={{ width: `${Math.min(100, Math.max(0, row.pct))}%` }}
                 />
               </div>
             </div>

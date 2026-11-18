@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { X, Calendar, Check, Lightbulb } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCreateGoal } from "@/lib/api/hooks"
 
 interface CreateGoalModalProps {
   open: boolean
@@ -15,6 +16,26 @@ export function CreateGoalModal({ open, onClose }: CreateGoalModalProps) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [duration, setDuration] = useState<DurationType>("short")
+  const [error, setError] = useState<string | null>(null)
+  const createGoal = useCreateGoal()
+
+  const handleSubmit = async () => {
+    if (!title.trim() || createGoal.isPending) return
+    setError(null)
+    try {
+      await createGoal.mutateAsync({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        type: duration === "long" ? "long_term" : "short_term",
+      })
+      setTitle("")
+      setDescription("")
+      setDuration("short")
+      onClose()
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
 
   // Close on Escape and lock scroll while open.
   useEffect(() => {
@@ -158,11 +179,18 @@ export function CreateGoalModal({ open, onClose }: CreateGoalModalProps) {
 
         {/* Footer */}
         <div className="flex flex-col items-center gap-3 px-8 pb-6 pt-4">
+          {error && (
+            <p className="w-full rounded-xl bg-red-50 px-4 py-2 text-center font-sans text-[13px] text-red-600">
+              {error}
+            </p>
+          )}
           <button
             type="button"
-            className="h-[50px] w-full rounded-full bg-[#C9D8FA] font-sans text-[16px] font-semibold text-[#131313] transition-colors hover:bg-[#B4CBF7]"
+            onClick={handleSubmit}
+            disabled={!title.trim() || createGoal.isPending}
+            className="h-[50px] w-full rounded-full bg-[#C9D8FA] font-sans text-[16px] font-semibold text-[#131313] transition-colors hover:bg-[#B4CBF7] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Next
+            {createGoal.isPending ? "Creating…" : "Create Goal"}
           </button>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-5 rounded-full bg-[#2563EB]" />

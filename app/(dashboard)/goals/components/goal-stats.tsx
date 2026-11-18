@@ -1,33 +1,40 @@
 import { Card, CardContent } from "@/components/ui/card"
 
-const stats = [
-  {
-    label: "Total Goals",
-    value: "5",
-    subtext: "Active this week",
-    dotColor: "#7C3AED",
-  },
-  {
-    label: "Completed",
-    value: "3",
-    subtext: "60% completion rate",
-    dotColor: "#2563EB",
-  },
-  {
-    label: "Total Streak",
-    value: "46",
-    subtext: "Cumulative days",
-    dotColor: "#FF6B35",
-  },
-  {
-    label: "Longest Streak",
-    value: "21",
-    subtext: "Personal best",
-    dotColor: "#28A745",
-  },
-]
+export interface GoalStatsData {
+  total: number
+  active: number
+  archived: number
+  totalHabits: number
+}
 
-export function GoalStats() {
+export function GoalStats({ data }: { data: GoalStatsData }) {
+  const stats = [
+    {
+      label: "Total Goals",
+      value: String(data.total),
+      subtext: "Across all time",
+      dotColor: "#7C3AED",
+    },
+    {
+      label: "Active",
+      value: String(data.active),
+      subtext: "Currently tracking",
+      dotColor: "#2563EB",
+    },
+    {
+      label: "Linked Habits",
+      value: String(data.totalHabits),
+      subtext: "Habits under goals",
+      dotColor: "#FF6B35",
+    },
+    {
+      label: "Archived",
+      value: String(data.archived),
+      subtext: "Completed / shelved",
+      dotColor: "#28A745",
+    },
+  ]
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (

@@ -8,8 +8,14 @@ import Apple from "../../assets/apple.svg";
 import LinkedIn from "../../assets/linkedin.svg";
 import X from "../../assets/x.svg";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/auth-context";
 
 export default function LoginPage() {
+    const router = useRouter();
+    const { signIn, signInWithGoogle, configured } = useAuth();
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -23,6 +29,30 @@ export default function LoginPage() {
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setSubmitting(true);
+        try {
+            await signIn(formData.email.trim(), formData.password);
+            router.push("/dashboard");
+        } catch (err) {
+            setError((err as Error).message.replace("Firebase: ", ""));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleGoogle = async () => {
+        setError(null);
+        try {
+            await signInWithGoogle();
+            router.push("/dashboard");
+        } catch (err) {
+            setError((err as Error).message.replace("Firebase: ", ""));
+        }
     };
 
     return (
@@ -41,7 +71,15 @@ export default function LoginPage() {
                     <h2 className="my-4 text-3xl text-center font-bold tracking-tight text-slate-950">
                         Welcome Back!
                     </h2>
-                    <form className="space-y-5">
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        {!configured && (
+                            <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                                Auth isn&apos;t configured yet — set NEXT_PUBLIC_FIREBASE_* in .env.local.
+                            </p>
+                        )}
+                        {error && (
+                            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
+                        )}
                         <label className="block">
                             <span className="mb-2 block text-sm font-medium text-slate-700">Email Address</span>
                             <input
@@ -74,10 +112,10 @@ export default function LoginPage() {
                         </div>
                         <button
                             type="submit"
-                            disabled={!isFormValid}
+                            disabled={!isFormValid || submitting || !configured}
                             className="inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-semibold text-white bg-[#2563EB] disabled:bg-[#C9D8FA] disabled:cursor-not-allowed cursor-pointer"
                         >
-                            Log In
+                            {submitting ? "Logging in…" : "Log In"}
                         </button>
                     </form>
 
@@ -92,7 +130,12 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex flex-col gap-4 mt-5">
-                        <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                        <button
+                            type="button"
+                            onClick={handleGoogle}
+                            disabled={!configured}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
                             <Image src={Google} alt="Google logo" className="h-5 w-5" />
                             Google
                         </button>
