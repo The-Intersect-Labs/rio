@@ -22,9 +22,11 @@ import {
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   type User as FirebaseUser,
 } from 'firebase/auth'
@@ -71,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return
     }
+    // Completes the signInWithRedirect fallback flow (returns null otherwise).
+    getRedirectResult(auth).catch((e) => setError((e as Error).message))
     const unsub = onAuthStateChanged(auth, async (u) => {
       setFirebaseUser(u)
       if (!u) {
@@ -113,7 +117,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth = getFirebaseAuth()
     if (!auth) throw new Error('Firebase is not configured')
     setError(null)
-    await signInWithPopup(auth, new GoogleAuthProvider())
+    const provider = new GoogleAuthProvider()
+    try {
+      await signInWithPopup(auth, provider)
+    } catch (e) {
+      // Browsers with third-party storage / popup blocking break the popup flow.
+      // Fall back to a full-page redirect, which works everywhere.
+      const code = (e as { code?: string }).code
+      if (
+        code === 'auth/popup-blocked' ||
+        code === 'auth/popup-closed-by-user' ||
+        code === 'auth/operation-not-supported-in-this-environment' ||
+        code === 'auth/web-storage-unsupported'
+      ) {
+        await signInWithRedirect(auth, provider)
+        return
+      }
+      throw e
+    }
   }, [])
 
   const signOut = useCallback(async () => {
