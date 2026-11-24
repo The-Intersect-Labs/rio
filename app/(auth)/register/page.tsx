@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import signupImage from "../../assets/signup.png";
@@ -14,7 +14,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 
 export default function SignupPage() {
     const router = useRouter();
-    const { signUp, signInWithGoogle, configured } = useAuth();
+    const { signUp, signInWithGoogle, configured, firebaseUser, loading } = useAuth();
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
@@ -24,6 +24,13 @@ export default function SignupPage() {
         confirmPassword: "",
         agreeToTerms: false,
     });
+
+    // Leave the auth page once Firebase confirms the user (popup OR redirect
+    // return). New sign-ups go to onboarding. Pushing after `await signUp()`
+    // races onAuthStateChanged.
+    useEffect(() => {
+        if (!loading && firebaseUser) router.replace("/onboarding");
+    }, [loading, firebaseUser, router]);
 
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
@@ -61,7 +68,7 @@ export default function SignupPage() {
         setSubmitting(true);
         try {
             await signUp(formData.email.trim(), formData.password);
-            router.push("/onboarding");
+            // Navigation handled by the auth-state effect above.
         } catch (err) {
             setError((err as Error).message.replace("Firebase: ", ""));
         } finally {
@@ -73,7 +80,7 @@ export default function SignupPage() {
         setError(null);
         try {
             await signInWithGoogle();
-            router.push("/onboarding");
+            // Popup → effect redirects. Redirect flow → returns here, effect fires.
         } catch (err) {
             setError((err as Error).message.replace("Firebase: ", ""));
         }

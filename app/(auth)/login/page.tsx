@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import signupImage from "../../assets/signup.png";
 import Google from "../../assets/google.svg";
@@ -13,13 +13,21 @@ import { useAuth } from "@/lib/auth/auth-context";
 
 export default function LoginPage() {
     const router = useRouter();
-    const { signIn, signInWithGoogle, configured } = useAuth();
+    const { signIn, signInWithGoogle, configured, firebaseUser, loading } = useAuth();
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
+
+    // Single source of truth for "you're signed in, leave the auth page".
+    // Covers the popup flow AND the signInWithRedirect return trip. Pushing
+    // straight after `await signIn*()` races onAuthStateChanged and gets
+    // bounced back here by RequireAuth.
+    useEffect(() => {
+        if (!loading && firebaseUser) router.replace("/dashboard");
+    }, [loading, firebaseUser, router]);
 
     const isFormValid = formData.email.trim() && formData.password.trim();
 
@@ -37,7 +45,7 @@ export default function LoginPage() {
         setSubmitting(true);
         try {
             await signIn(formData.email.trim(), formData.password);
-            router.push("/dashboard");
+            // Navigation handled by the auth-state effect above.
         } catch (err) {
             setError((err as Error).message.replace("Firebase: ", ""));
         } finally {
@@ -49,7 +57,7 @@ export default function LoginPage() {
         setError(null);
         try {
             await signInWithGoogle();
-            router.push("/dashboard");
+            // Popup → effect redirects. Redirect flow → returns here, effect fires.
         } catch (err) {
             setError((err as Error).message.replace("Firebase: ", ""));
         }
