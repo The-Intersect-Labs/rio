@@ -15,5 +15,6 @@ export const qk = {
     ['insights', 'history', params ?? {}] as const,
   analyticsOverview: (days: number) => ['analytics', 'overview', days] as const,
   weeklyReview: ['analytics', 'weekly-review'] as const,
+  scorecard: ['scorecard'] as const,
   notificationStatus: ['notifications', 'status'] as const,
 }

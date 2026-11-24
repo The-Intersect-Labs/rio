@@ -8,7 +8,22 @@ import {
   StepPillars,
   StepFirstHabit,
   StepComplete,
+  type BehaviorDraft,
 } from "./steps";
+import {
+  useCreateGoal,
+  useCreateHabit,
+  useCreateScorecardEntry,
+  useUpdateProfile,
+} from "@/lib/api/hooks";
+import type { PillarType, ScorecardClassification } from "@/lib/api/types";
+
+// The API only stores a scheduled time (HH:MM), so map the coarse picker to one.
+const TIME_OF_DAY: Record<string, string> = {
+  Morning: "08:00",
+  Afternoon: "14:00",
+  Evening: "20:00",
+};
 
 export function OnboardingFlow() {
   const router = useRouter();
@@ -16,32 +31,83 @@ export function OnboardingFlow() {
 
   // form state
   const [identity, setIdentity] = useState("");
-  const [habits, setHabits] = useState<string[]>([]);
-  const [pillars, setPillars] = useState<string[]>([]);
+  const [behaviors, setBehaviors] = useState<BehaviorDraft[]>([]);
+  const [pillars, setPillars] = useState<PillarType[]>([]);
   const [habitName, setHabitName] = useState("");
   const [frequency, setFrequency] = useState("Daily");
   const [timeOfDay, setTimeOfDay] = useState("Morning");
   const [trigger, setTrigger] = useState("");
 
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateProfile = useUpdateProfile();
+  const createScorecardEntry = useCreateScorecardEntry();
+  const createGoal = useCreateGoal();
+  const createHabit = useCreateHabit();
+
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const togglePillar = (p: string) =>
+  const togglePillar = (p: PillarType) =>
     setPillars((prev) =>
       prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
     );
 
-  const finish = () => {
-    // Persist onboarding result for the app (swap for a real API later)
+  const addBehavior = (behavior: string) =>
+    setBehaviors((prev) => [...prev, { behavior }]);
+
+  const removeBehavior = (i: number) =>
+    setBehaviors((prev) => prev.filter((_, idx) => idx !== i));
+
+  const classifyBehavior = (i: number, classification: ScorecardClassification) =>
+    setBehaviors((prev) =>
+      prev.map((b, idx) => (idx === i ? { ...b, classification } : b)),
+    );
+
+  const finish = async () => {
+    setError(null);
+    setSaving(true);
     try {
-      localStorage.setItem(
-        "rio:onboarding",
-        JSON.stringify({ identity, habits, pillars, firstHabit: habitName, frequency, timeOfDay, trigger }),
-      );
-    } catch {
-      /* ignore storage errors */
+      // 1. Persist identity + pillars + the completion flag on the profile.
+      await updateProfile.mutateAsync({
+        identityStatement: identity.trim() || undefined,
+        selectedPillars: pillars,
+        onboardingCompleted: true,
+      });
+
+      // 2. Persist the behavior scorecard (POST /scorecard, one per entry).
+      for (const b of behaviors) {
+        if (!b.classification) continue;
+        await createScorecardEntry.mutateAsync({
+          behavior: b.behavior,
+          classification: b.classification,
+        });
+      }
+
+      // 3. Habits must belong to a goal — create one to hold the first habit.
+      if (habitName.trim()) {
+        const goal = await createGoal.mutateAsync({
+          title: "My Habits",
+          description: identity.trim() || undefined,
+          type: "long_term",
+        });
+        await createHabit.mutateAsync({
+          goalId: goal.id,
+          title: habitName.trim(),
+          pillar: pillars[0],
+          frequency: frequency === "Weekly" ? "weekly" : "daily",
+          scheduledTime: TIME_OF_DAY[timeOfDay],
+          habitStackTrigger: trigger.trim() || undefined,
+        });
+      }
+
+      router.push("/dashboard");
+    } catch (e) {
+      setError((e as Error).message || "Something went wrong saving your setup.");
+    } finally {
+      setSaving(false);
     }
-    router.push("/dashboard");
   };
 
   const isComplete = step === 4;
@@ -49,7 +115,7 @@ export function OnboardingFlow() {
   return (
     <div className="w-full max-w-[520px]">
       {isComplete ? (
-        <StepComplete onFinish={finish} />
+        <StepComplete onFinish={finish} saving={saving} error={error} />
       ) : (
         <div className="rounded-3xl bg-white p-8 shadow-[0_10px_40px_rgba(15,23,42,0.06)]">
           {step > 0 && (
@@ -68,9 +134,10 @@ export function OnboardingFlow() {
 
           {step === 1 && (
             <StepHabits
-              habits={habits}
-              onAdd={(h) => setHabits((prev) => [...prev, h])}
-              onRemove={(i) => setHabits((prev) => prev.filter((_, idx) => idx !== i))}
+              behaviors={behaviors}
+              onAdd={addBehavior}
+              onRemove={removeBehavior}
+              onClassify={classifyBehavior}
               onNext={next}
             />
           )}

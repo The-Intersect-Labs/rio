@@ -6,25 +6,17 @@ import {
   Briefcase,
   Smile,
   Users,
-  Dumbbell,
-  Brain,
-  Palette,
-  Target,
-  TrendingUp,
-  HeartHandshake,
-  Compass,
-  Wallet,
-  Home,
-  Plus,
-  X,
   Lightbulb,
   Bot,
   AlertTriangle,
   Check,
+  Plus,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import type { PillarType, ScorecardClassification } from "@/lib/api/types";
 
 /* ---------------------------------- shared --------------------------------- */
 
@@ -203,33 +195,69 @@ export function StepIdentity({
   );
 }
 
-/* -------------------------------- step 2: current habits -------------------------------- */
+/* ------------------------- step 2: current habits (scorecard) ------------------------- */
+// Backed by POST /v1/scorecard — each behavior is stored with a classification.
+
+export const MAX_BEHAVIORS = 10;
+
+export type BehaviorDraft = {
+  behavior: string;
+  classification?: ScorecardClassification;
+};
+
+const CLASSIFICATIONS: {
+  value: ScorecardClassification;
+  label: string;
+  active: string;
+}[] = [
+  {
+    value: "reinforcing",
+    label: "Reinforcing",
+    active: "border-[#16A34A] bg-[#DCFCE7] text-[#166534]",
+  },
+  {
+    value: "neutral",
+    label: "Neutral",
+    active: "border-[#64748B] bg-[#F1F5F9] text-[#334155]",
+  },
+  {
+    value: "conflicting",
+    label: "Conflicting",
+    active: "border-[#DC2626] bg-[#FEE2E2] text-[#991B1B]",
+  },
+];
 
 export function StepHabits({
-  habits,
+  behaviors,
   onAdd,
   onRemove,
+  onClassify,
   onNext,
 }: {
-  habits: string[];
-  onAdd: (h: string) => void;
+  behaviors: BehaviorDraft[];
+  onAdd: (behavior: string) => void;
   onRemove: (i: number) => void;
+  onClassify: (i: number, classification: ScorecardClassification) => void;
   onNext: () => void;
 }) {
   const [draft, setDraft] = useState("");
+  const atLimit = behaviors.length >= MAX_BEHAVIORS;
   const add = () => {
-    if (draft.trim()) {
+    if (draft.trim() && !atLimit) {
       onAdd(draft.trim());
       setDraft("");
     }
   };
+  // Every listed behavior needs a classification before continuing (the API
+  // requires one). Empty list is fine — this step is skippable.
+  const allClassified = behaviors.every((b) => !!b.classification);
 
   return (
     <div>
       <StepProgress step={1} />
       <StepHeading
         title="Your Current Habits"
-        subtitle="List behaviors you already do regularly."
+        subtitle="List behaviors you already do, then tag how they serve you."
       />
 
       <div className="mt-6 flex gap-3">
@@ -238,19 +266,27 @@ export function StepHabits({
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
           placeholder="e.g., Reading before bed"
-          className="h-12 flex-1 rounded-xl border border-[#E5E7EB] bg-[#F3F4F6] px-4 font-sans text-[16px] text-[#111827] outline-none transition placeholder:text-[#6B7280] focus:border-[#2563EB]"
+          disabled={atLimit}
+          className="h-12 flex-1 rounded-xl border border-[#E5E7EB] bg-[#F3F4F6] px-4 font-sans text-[16px] text-[#111827] outline-none transition placeholder:text-[#6B7280] focus:border-[#2563EB] disabled:opacity-50"
         />
         <button
           type="button"
           onClick={add}
-          className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#2563EB] px-5 font-sans text-[14px] font-semibold text-white transition-colors hover:bg-[#1D4FD7]"
+          disabled={atLimit}
+          className="inline-flex h-12 items-center gap-1.5 rounded-xl bg-[#2563EB] px-5 font-sans text-[14px] font-semibold text-white transition-colors hover:bg-[#1D4FD7] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-4 w-4" /> Add
         </button>
       </div>
 
-      <div className="mt-4 space-y-2">
-        {habits.length === 0 ? (
+      {atLimit && (
+        <p className="mt-2 font-sans text-[13px] text-[#6B7280]">
+          You can track up to {MAX_BEHAVIORS} behaviors here.
+        </p>
+      )}
+
+      <div className="mt-4 space-y-3">
+        {behaviors.length === 0 ? (
           <div className="flex items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4">
             <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-[#F59E0B]" />
             <p className="font-sans text-[15px] text-[#6B7280]">
@@ -258,51 +294,66 @@ export function StepHabits({
             </p>
           </div>
         ) : (
-          habits.map((h, i) => (
+          behaviors.map((b, i) => (
             <div
-              key={`${h}-${i}`}
-              className="flex items-center justify-between rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3"
+              key={`${b.behavior}-${i}`}
+              className="rounded-2xl border border-[#E5E7EB] bg-white p-4"
             >
-              <span className="font-sans text-[15px] text-[#111827]">{h}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
-                className="text-[#9CA3AF] transition-colors hover:text-[#EF4444]"
-                aria-label={`Remove ${h}`}
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-sans text-[15px] text-[#111827]">
+                  {b.behavior}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(i)}
+                  className="text-[#9CA3AF] transition-colors hover:text-[#EF4444]"
+                  aria-label={`Remove ${b.behavior}`}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="mt-3 flex gap-2">
+                {CLASSIFICATIONS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => onClassify(i, c.value)}
+                    className={cn(
+                      "flex-1 rounded-lg border px-2 py-1.5 font-sans text-[12px] font-medium transition-colors",
+                      b.classification === c.value
+                        ? c.active
+                        : "border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#94A3B8]",
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
             </div>
           ))
         )}
       </div>
 
       <div className="mt-8">
-        <ActionButton onClick={onNext}>Continue</ActionButton>
+        <ActionButton disabled={!allClassified} onClick={onNext}>
+          Continue
+        </ActionButton>
       </div>
     </div>
   );
 }
 
 /* -------------------------------- step 3: pillars -------------------------------- */
+// NOTE: this list mirrors the API's `PillarType` enum exactly. Keep in sync.
 
-type Pillar = { label: string; icon: LucideIcon };
+type Pillar = { value: PillarType; label: string; icon: LucideIcon };
 
 const PILLARS: Pillar[] = [
-  { label: "Health", icon: Heart },
-  { label: "Learning", icon: BookOpen },
-  { label: "Wealth / Career", icon: Briefcase },
-  { label: "Emotional / Spiritual", icon: Smile },
-  { label: "Relationships", icon: Users },
-  { label: "Fitness / Physical Activity", icon: Dumbbell },
-  { label: "Mental Health", icon: Brain },
-  { label: "Creativity", icon: Palette },
-  { label: "Productivity / Focus", icon: Target },
-  { label: "Personal Growth", icon: TrendingUp },
-  { label: "Community / Contribution", icon: HeartHandshake },
-  { label: "Adventure / Experiences", icon: Compass },
-  { label: "Financial Stability", icon: Wallet },
-  { label: "Family", icon: Home },
+  { value: "health", label: "Health", icon: Heart },
+  { value: "learning", label: "Learning", icon: BookOpen },
+  { value: "wealth", label: "Wealth / Career", icon: Briefcase },
+  { value: "emotional_spiritual", label: "Emotional / Spiritual", icon: Smile },
+  { value: "relationships", label: "Relationships", icon: Users },
 ];
 
 export function StepPillars({
@@ -310,8 +361,8 @@ export function StepPillars({
   onToggle,
   onNext,
 }: {
-  selected: string[];
-  onToggle: (p: string) => void;
+  selected: PillarType[];
+  onToggle: (p: PillarType) => void;
   onNext: () => void;
 }) {
   return (
@@ -323,21 +374,21 @@ export function StepPillars({
           <>
             Balanced habits create sustainable growth.
             <br />
-            <span className="font-medium">Select 2- 4 pillars.</span>
+            <span className="font-medium">Select 2 - 4 pillars.</span>
           </>
         }
       />
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3">
         {PILLARS.map((p) => {
-          const active = selected.includes(p.label);
+          const active = selected.includes(p.value);
           return (
             <button
-              key={p.label}
+              key={p.value}
               type="button"
-              onClick={() => onToggle(p.label)}
+              onClick={() => onToggle(p.value)}
               className={cn(
-                "flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border p-2 text-center transition-colors",
+                "flex flex-col items-center justify-center gap-2 rounded-2xl border p-4 text-center transition-colors",
                 active
                   ? "border-[#2563EB] bg-[#EBF1FF]"
                   : "border-transparent bg-[#EEF2FB] hover:bg-[#E3EAF9]",
@@ -495,7 +546,7 @@ export function StepFirstHabit({
 
 const CONFETTI_COLORS = ["#2563EB", "#22C55E", "#A855F7", "#F59E0B", "#38BDF8"];
 
-function confetti(index: number, total: number) {
+function confetti(index: number) {
   // deterministic pseudo-random so SSR and client match
   const r = (n: number) => {
     const x = Math.sin(index * 12.9898 + n * 78.233) * 43758.5453;
@@ -510,12 +561,20 @@ function confetti(index: number, total: number) {
   };
 }
 
-export function StepComplete({ onFinish }: { onFinish: () => void }) {
+export function StepComplete({
+  onFinish,
+  saving,
+  error,
+}: {
+  onFinish: () => void;
+  saving?: boolean;
+  error?: string | null;
+}) {
   return (
     <div className="relative flex min-h-[560px] w-full flex-col items-center justify-center overflow-hidden text-center">
       <div className="pointer-events-none absolute inset-0">
         {Array.from({ length: 70 }).map((_, i) => {
-          const c = confetti(i, 70);
+          const c = confetti(i);
           return (
             <span
               key={i}
@@ -543,8 +602,17 @@ export function StepComplete({ onFinish }: { onFinish: () => void }) {
         <p className="mx-auto mt-3 max-w-md font-sans text-[18px] leading-snug text-[#6B7280]">
           Your RIO experience begins now. Let&apos;s start building great habits together!
         </p>
+
+        {error && (
+          <p className="mx-auto mt-6 max-w-md rounded-xl bg-red-50 px-4 py-3 font-sans text-[14px] text-red-600">
+            {error}
+          </p>
+        )}
+
         <div className="mt-14 w-[320px] max-w-full">
-          <ActionButton onClick={onFinish}>Go to Dashboard</ActionButton>
+          <ActionButton onClick={onFinish} disabled={saving}>
+            {saving ? "Saving…" : "Go to Dashboard"}
+          </ActionButton>
         </div>
       </div>
     </div>

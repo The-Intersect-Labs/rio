@@ -353,3 +353,44 @@ export interface WeeklyReview {
   pillarBreakdown: { pillar: string; total: number; completed: number; rate: number }[]
   createdAt: string
 }
+
+// ── Scorecard (Awareness screen before goal creation) ────────────────────────
+// (ScorecardClassification enum lives with the other Prisma enums above.)
+export interface ScorecardEntry {
+  id: string
+  userId: string
+  behavior: string
+  classification: ScorecardClassification
+  /** Set once the entry is promoted to a tracked habit. */
+  convertedHabitId: string | null
+  convertedHabit?: { id: string; title: string } | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ScorecardSummary {
+  total: number
+  reinforcing: number
+  neutral: number
+  conflicting: number
+  identitySignal: string | null
+}
+
+export interface ScorecardResponse {
+  entries: ScorecardEntry[]
+  summary: ScorecardSummary
+}
+
+export interface CreateScorecardEntryInput {
+  behavior: string
+  classification: ScorecardClassification
+}
+
+export interface UpdateScorecardEntryInput {
+  classification: ScorecardClassification
+}
+
+export interface ConvertScorecardInput {
+  goalId: string
+  title?: string
+}

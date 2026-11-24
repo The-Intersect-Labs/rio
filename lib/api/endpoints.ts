@@ -7,10 +7,12 @@ import type {
   AnalyticsOverview,
   BehavioralSnapshot,
   CheckinsListResponse,
+  ConvertScorecardInput,
   CreateCheckinInput,
   CreateCheckinResponse,
   CreateGoalInput,
   CreateHabitInput,
+  CreateScorecardEntryInput,
   CreateTaskInput,
   Dashboard,
   Goal,
@@ -19,12 +21,15 @@ import type {
   HabitsListResponse,
   Insight,
   InsightsListResponse,
+  ScorecardEntry,
+  ScorecardResponse,
   SyncedUser,
   Task,
   TasksListResponse,
   UpdateGoalInput,
   UpdateHabitInput,
   UpdateProfileInput,
+  UpdateScorecardEntryInput,
   UpdateTaskInput,
   UserProfile,
 } from './types'
@@ -162,6 +167,23 @@ export const notificationsApi = {
   unsubscribe: (endpoint?: string) =>
     api.del<null>(
       '/notifications/web-push/subscribe' + (endpoint ? `?endpoint=${encodeURIComponent(endpoint)}` : ''),
+    ),
+}
+
+// ── Scorecard (Awareness) ────────────────────────────────────────────────────
+// Behaviors the user already does, tagged reinforcing / neutral / conflicting.
+// Feeds the onboarding "current habits" step and the pre-goal awareness screen.
+export const scorecardApi = {
+  list: () => api.get<ScorecardResponse>('/scorecard'),
+  create: (input: CreateScorecardEntryInput) =>
+    api.post<ScorecardEntry>('/scorecard', input),
+  update: (entryId: string, input: UpdateScorecardEntryInput) =>
+    api.patch<ScorecardEntry>(`/scorecard/${entryId}`, input),
+  remove: (entryId: string) => api.del<null>(`/scorecard/${entryId}`),
+  convert: (entryId: string, input: ConvertScorecardInput) =>
+    api.post<{ habit: Habit; scorecardEntry: ScorecardEntry }>(
+      `/scorecard/${entryId}/convert`,
+      input,
     ),
 }
 

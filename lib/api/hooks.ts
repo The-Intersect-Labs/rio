@@ -19,17 +19,21 @@ import {
   habitsApi,
   insightsApi,
   notificationsApi,
+  scorecardApi,
   tasksApi,
   usersApi,
 } from './endpoints'
 import type {
+  ConvertScorecardInput,
   CreateCheckinInput,
   CreateGoalInput,
   CreateHabitInput,
+  CreateScorecardEntryInput,
   CreateTaskInput,
   UpdateGoalInput,
   UpdateHabitInput,
   UpdateProfileInput,
+  UpdateScorecardEntryInput,
   UpdateTaskInput,
 } from './types'
 
@@ -48,6 +52,49 @@ export function useUpdateProfile() {
     mutationFn: (input: UpdateProfileInput) => usersApi.updateProfile(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.me })
+      qc.invalidateQueries({ queryKey: qk.dashboard })
+    },
+  })
+}
+
+// ── Scorecard (Awareness) ────────────────────────────────────────────────────
+export function useScorecard() {
+  return useQuery({ queryKey: qk.scorecard, queryFn: scorecardApi.list })
+}
+
+export function useCreateScorecardEntry() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateScorecardEntryInput) => scorecardApi.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.scorecard }),
+  })
+}
+
+export function useUpdateScorecardEntry() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ entryId, input }: { entryId: string; input: UpdateScorecardEntryInput }) =>
+      scorecardApi.update(entryId, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.scorecard }),
+  })
+}
+
+export function useDeleteScorecardEntry() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (entryId: string) => scorecardApi.remove(entryId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.scorecard }),
+  })
+}
+
+export function useConvertScorecardEntry() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ entryId, input }: { entryId: string; input: ConvertScorecardInput }) =>
+      scorecardApi.convert(entryId, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.scorecard })
+      qc.invalidateQueries({ queryKey: ['habits'] })
       qc.invalidateQueries({ queryKey: qk.dashboard })
     },
   })
